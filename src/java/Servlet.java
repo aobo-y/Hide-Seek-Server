@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
+import java.util.Random;
 
 /**
  *
@@ -29,6 +30,18 @@ import org.json.simple.JSONObject;
 @WebServlet(urlPatterns = {"/QueryGenerator"})
 public class Servlet extends HttpServlet {
 
+    public static String[] topics = {"Arts", "Business", "Computers", 
+                                    "Games", "Health", "Home",
+                                    "News", "Recreation", "Reference",
+                                    "Regional", "Science", "Shopping",
+                                    "Society", "Sports", "Kids & Teens Directory",
+                                    "World"};
+    
+    public static String getRandomTopic(String[] arr) {
+        int idx = new Random().nextInt(arr.length);
+        return arr[idx];
+    }
+    
     ArrayList<LanguageModel> langModels;
     GenerateCoverQuery GQ;
     String uid;
@@ -98,12 +111,11 @@ public class Servlet extends HttpServlet {
 
             //get number of cover query from client
             int numcover = Integer.parseInt(request.getParameter("numcover"));
-            System.out.println("number of queries to generated: " + (numcover - 1));
 
             //process input and generate result
             //use Java server to generate n-1 cover queries
-            ArrayList<String> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover);
-            System.out.println("GENERATED Qs: " + coverQueries);
+            ArrayList<String> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
+            System.out.println("GENERATED Qs: " + coverQueries + ", total count: " + coverQueries.size());
 
             //store the original query and cover queries into db by JDBC
             //Input: uid, time, query, tag (1 = real, 0 = cover)
@@ -144,13 +156,15 @@ public class Servlet extends HttpServlet {
             if(!coverQueries.isEmpty()) {
                 obj.put("db","success");
                 for(String s:coverQueries) {
-                    key = ctStr + String.valueOf(count);
+                    key = getRandomTopic(topics);
                     obj.put(key, s); 
                     count++;
                 }
             } else {
                 obj.put("output1","null"); 
             }
+            //write input's topic
+            obj.put(getRandomTopic(topics), input);
 
             out.print(obj.toJSONString());
             out.flush();
