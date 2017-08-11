@@ -115,7 +115,7 @@ public class Servlet extends HttpServlet {
             //process input and generate result
             //use Java server to generate n-1 cover queries
             ArrayList<String> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
-            System.out.println("GENERATED Qs: " + coverQueries + ", total count: " + coverQueries.size());
+            System.out.println("GENERATED Qs from Java server: " + coverQueries + ", total count: " + coverQueries.size());
 
             //store the original query and cover queries into db by JDBC
             //Input: uid, time, query, tag (1 = real, 0 = cover)
@@ -151,21 +151,23 @@ public class Servlet extends HttpServlet {
             PrintWriter out = response.getWriter();
             JSONObject obj = new JSONObject();
             int count = 1;
-            String ctStr = "output";
-            String key;
+//            String ctStr = "output";
+//            String key;
             if(!coverQueries.isEmpty()) {
                 obj.put("db","success");
                 for(String s:coverQueries) {
-                    key = getRandomTopic(topics);
-                    obj.put(key, s); 
+                    obj.put(s, getRandomTopic(topics)); 
                     count++;
                 }
             } else {
                 obj.put("output1","null"); 
             }
             //write input's topic
-            obj.put(getRandomTopic(topics), input);
-
+            obj.put("input", getRandomTopic(topics));
+            
+            System.out.println("total count: " + coverQueries.size());
+            System.out.println(coverQueries);
+            System.out.println(obj.toJSONString());
             out.print(obj.toJSONString());
             out.flush();
 
