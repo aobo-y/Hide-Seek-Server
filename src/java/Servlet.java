@@ -7,6 +7,7 @@
 import edu.virginia.cs.model.GenerateCoverQuery;
 import edu.virginia.cs.model.LanguageModel;
 import edu.virginia.cs.model.LoadLanguageModel;
+import edu.virginia.cs.user.Query;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -114,7 +115,7 @@ public class Servlet extends HttpServlet {
 
             //process input and generate result
             //use Java server to generate n-1 cover queries
-            ArrayList<String> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
+            ArrayList<Query> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
             System.out.println("GENERATED Qs from Java server: " + coverQueries + ", total count: " + coverQueries.size());
 
             //store the original query and cover queries into db by JDBC
