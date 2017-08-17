@@ -7,7 +7,7 @@
 import edu.virginia.cs.model.GenerateCoverQuery;
 import edu.virginia.cs.model.LanguageModel;
 import edu.virginia.cs.model.LoadLanguageModel;
-import edu.virginia.cs.user.Query;
+//import edu.virginia.cs.user.Query;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -31,12 +31,17 @@ import java.util.Random;
 @WebServlet(urlPatterns = {"/QueryGenerator"})
 public class Servlet extends HttpServlet {
 
-    public static String[] topics = {"Arts", "Business", "Computers", 
-                                    "Games", "Health", "Home",
-                                    "News", "Recreation", "Reference",
-                                    "Regional", "Science", "Shopping",
-                                    "Society", "Sports", "Kids & Teens Directory",
-                                    "World"};
+//    public static String[] topics = {"Arts", "Business", "Computers", 
+//                                    "Games", "Health", "Home",
+//                                    "News", "Recreation", "Reference",
+//                                    "Regional", "Science", "Shopping",
+//                                    "Society", "Sports", "Kids & Teens Directory",
+//                                    "World"};
+    
+    public static String[] topics = {"Top/Science/Instruments_and_Supplies/Laboratory_Automation_and_Robotics",
+                                    "Top/Science/Instruments_and_Supplies/Isotopes",
+                                    "Top/Shopping/Toys_and_Games/Outdoor_Play",
+                                    "Top/Health/Conditions_and_Diseases/Rare_Disorders"};
     
     public static String getRandomTopic(String[] arr) {
         int idx = new Random().nextInt(arr.length);
@@ -115,14 +120,17 @@ public class Servlet extends HttpServlet {
 
             //process input and generate result
             //use Java server to generate n-1 cover queries
-            ArrayList<Query> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
-            System.out.println("GENERATED Qs from Java server: " + coverQueries + ", total count: " + coverQueries.size());
+            //ArrayList<Query> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
+            ArrayList<String> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
 
             //store the original query and cover queries into db by JDBC
             //Input: uid, time, query, tag (1 = real, 0 = cover)
             JDBC.saveQuery(uid, time, input, 1);
-            for(String q: coverQueries) {
-                JDBC.saveQuery(uid, time, q, 0);
+//            for(Query q: coverQueries) {
+//                JDBC.saveQuery(uid, time, q.getQuery(), 0);
+//            }
+            for(String s: coverQueries) {
+                JDBC.saveQuery(uid, time, s, 0);
             }
             
             //use Python server to generate 1 cover query
@@ -156,8 +164,12 @@ public class Servlet extends HttpServlet {
 //            String key;
             if(!coverQueries.isEmpty()) {
                 obj.put("db","success");
-                for(String s:coverQueries) {
-                    obj.put(s, getRandomTopic(topics)); 
+//                for(Query q:coverQueries) {
+//                    obj.put(q.getQuery(), q.getQueryTopic()); 
+//                    count++;
+//                }
+                for (String s: coverQueries) {
+                    obj.put(s, getRandomTopic(topics));
                     count++;
                 }
             } else {
@@ -166,9 +178,12 @@ public class Servlet extends HttpServlet {
             //write input's topic
             obj.put("input", getRandomTopic(topics));
             
-            System.out.println("total count: " + coverQueries.size());
-            System.out.println(coverQueries);
-            System.out.println(obj.toJSONString());
+            //write python query's topic
+            //obj.put("notopic", covQuery);
+            
+            //System.out.println("total count: " + coverQueries.size());
+            //System.out.println(coverQueries);
+            //System.out.println(obj.toJSONString());
             out.print(obj.toJSONString());
             out.flush();
 
