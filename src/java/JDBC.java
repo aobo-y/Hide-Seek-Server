@@ -161,7 +161,7 @@ public class JDBC {
         return result;
     }
     
-    public static void saveQuery(String uid, String time, String query, int tag) {
+    public static void saveQuery(String uid, String time, String query, int tag, String topic) {
         Connection conn = null;
         Statement stmt = null;
         try{
@@ -180,8 +180,13 @@ public class JDBC {
             stmt.executeQuery(sql);
             
             //Insert Record
-            sql = "INSERT INTO query " +
-            "VALUES ('" + uid + "', '" + time + "', '" + query + "', " + tag + ")";
+            if (topic.equals("notopic")) {
+                sql = "INSERT INTO query " +
+                "VALUES ('" + uid + "', '" + time + "', '" + query + "', " + tag + ", NULL)";
+            } else {
+                sql = "INSERT INTO query " +
+                "VALUES ('" + uid + "', '" + time + "', '" + query + "', " + tag + ", '" + topic + "')";
+            }
             stmt.executeUpdate(sql);      
             System.out.println("Inserted records into the table...");
             System.out.println();
