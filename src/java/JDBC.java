@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 /*
@@ -180,14 +181,27 @@ public class JDBC {
             stmt.executeQuery(sql);
             
             //Insert Record
-            if (topic.equals("notopic")) {
-                sql = "INSERT INTO query " +
-                "VALUES ('" + uid + "', '" + time + "', '" + query + "', " + tag + ", NULL)";
-            } else {
-                sql = "INSERT INTO query " +
-                "VALUES ('" + uid + "', '" + time + "', '" + query + "', " + tag + ", '" + topic + "')";
+//            if (topic.equals("notopic")) {
+//                sql = "INSERT INTO query " +
+//                "VALUES ('" + uid + "', '" + time + "', '" + query + "', " + tag + ", NULL)";
+//            } else {
+//                sql = "INSERT INTO query " +
+//                "VALUES ('" + uid + "', '" + time + "', '" + query + "', " + tag + ", '" + topic + "')";
+//            }
+            sql = "INSERT INTO query VALUES (?,?,?,?,?)";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, uid);
+                statement.setString(2, time);
+                statement.setString(3, query);
+                statement.setInt(4, tag);
+                if (topic.equals("notopic")) {
+                    statement.setNull(5, java.sql.Types.VARCHAR);
+                } else {
+                    statement.setString(5, topic);
+                }
+                statement.executeUpdate();
             }
-            stmt.executeUpdate(sql);      
+//            stmt.executeUpdate(sql);      
             System.out.println("Inserted records into the table...");
             System.out.println();
             
@@ -236,9 +250,16 @@ public class JDBC {
             stmt.executeQuery(sql);
             
             //Insert Record
-            sql = "INSERT INTO urls " +
-            "VALUES ('" + url + "', '" + content+ "', '" + query + "')";
-            stmt.executeUpdate(sql);      
+//            sql = "INSERT INTO urls " +
+//            "VALUES ('" + url + "', '" + content+ "', '" + query + "')";
+//            stmt.executeUpdate(sql); 
+            sql = "INSERT INTO urls VALUES (?,?,?)";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, url);
+                statement.setString(2, content);
+                statement.setString(3, query);
+                statement.executeUpdate();
+            }
             System.out.println("Inserted records into the table...");
             System.out.println();
             
@@ -287,9 +308,18 @@ public class JDBC {
             stmt.executeQuery(sql);
             
             //Insert Record
-            sql = "INSERT INTO clicks " +
-            "VALUES ('" + uid + "', '" + time + "', '" + query + "', '" + url + "', " + click + ")";
-            stmt.executeUpdate(sql);      
+//            sql = "INSERT INTO clicks " +
+//            "VALUES ('" + uid + "', '" + time + "', '" + query + "', '" + url + "', " + click + ")";
+//            stmt.executeUpdate(sql);      
+            sql = "INSERT INTO clicks VALUES (?,?,?,?,?)";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, uid);
+                statement.setString(2, time);
+                statement.setString(3, query);
+                statement.setString(4, url);
+                statement.setInt(5, click);
+                statement.executeUpdate();
+            }
             System.out.println("Inserted records into the table...");
             System.out.println();
             

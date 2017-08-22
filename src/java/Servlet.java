@@ -157,7 +157,7 @@ public class Servlet extends HttpServlet {
                 obj.put("input", splits[3]);
                 for (String s: coverQueries) {
                     cover_query_topic = splits[count];
-                    JDBC.saveQuery(uid, time, input, 0, cover_query_topic);
+                    JDBC.saveQuery(uid, time, s, 0, cover_query_topic);
                     obj.put(s, cover_query_topic);
                     count += 3;
                 }
@@ -206,7 +206,8 @@ public class Servlet extends HttpServlet {
             String content = request.getParameter("content"); 
             
             uid = request.getParameter("id");
-            System.out.println("INSIDE POST" + uid);
+            
+            System.out.println(uid + time + query + url + clickIndex);
 
             //save Clicks table
             try {
