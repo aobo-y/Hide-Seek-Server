@@ -89,6 +89,48 @@ public class JDBC {
         return result;
     }
     
+    public static void registerUser(String uid) {
+        Connection conn = null;
+        Statement stmt = null;
+        try{
+            Class.forName("com.mysql.jdbc.Driver");
+            System.out.println("Connecting to database...");
+            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+            stmt = conn.createStatement();
+            String sql;
+            sql = "INSERT INTO chrome.Users VALUES (?,?)";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, uid);
+                statement.setString(2, "");
+                statement.executeUpdate();
+            }
+            
+            System.out.println("Inserted records into the table...");
+            stmt.close();
+            conn.close();
+        }catch(SQLException se){
+           //Handle errors for JDBC
+           se.printStackTrace();
+        }catch(Exception e){
+           //Handle errors for Class.forName
+           e.printStackTrace();
+        }finally{
+           //finally block used to close resources
+           try{
+              if(stmt!=null)
+                 stmt.close();
+           }catch(SQLException se2){
+               
+           }
+           try{
+              if(conn!=null)
+                 conn.close();
+           }catch(SQLException se){
+              se.printStackTrace();
+           }
+        }
+    }
+    
     public static String getPrevious(String uid, String time) {
         Connection conn = null;
         Statement stmt = null;
