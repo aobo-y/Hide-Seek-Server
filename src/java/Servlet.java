@@ -4,10 +4,12 @@
  * and open the template in the editor.
  */
 
-import edu.virginia.cs.model.GenerateCoverQuery;
+//import edu.virginia.cs.model.GenerateCoverQuery;
 import edu.virginia.cs.model.LanguageModel;
 import edu.virginia.cs.model.LoadLanguageModel;
 import edu.virginia.cs.utility.FileReader;
+import edu.virginia.cs.utility.Util;
+import edu.virginia.cs.model.IntentAwarePrivacy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import java.util.Random;
+import java.util.HashMap;
 
 /**
  *
@@ -31,26 +34,7 @@ import java.util.Random;
  */
 @WebServlet(urlPatterns = {"/QueryGenerator"})
 public class Servlet extends HttpServlet {
-
-//    public static String[] topics = {"Arts", "Business", "Computers", 
-//                                    "Games", "Health", "Home",
-//                                    "News", "Recreation", "Reference",
-//                                    "Regional", "Science", "Shopping",
-//                                    "Society", "Sports", "Kids & Teens Directory",
-//                                    "World"};
     
-    public static String[] topics = {"Top/Science/Instruments_and_Supplies/Laboratory_Automation_and_Robotics",
-                                    "Top/Science/Instruments_and_Supplies/Isotopes",
-                                    "Top/Shopping/Toys_and_Games/Outdoor_Play",
-                                    "Top/Health/Conditions_and_Diseases/Rare_Disorders"};
-    
-    public static String getRandomTopic(String[] arr) {
-        int idx = new Random().nextInt(arr.length);
-        return arr[idx];
-    }
-    
-    ArrayList<LanguageModel> langModels;
-    GenerateCoverQuery GQ;
     String uid;
     
         @Override
@@ -59,20 +43,17 @@ public class Servlet extends HttpServlet {
             //notice the path string 
             //String path = System.getenv("QG_PATH");
             String path = "/Users/Lucius/Documents/data";
-            //System.out.println(path);
-            //String path = "/if15/zn8ae/QueryGenerator";
             String ReferencePath = path + "/data/Reference-Model";
-            String lmPath = path + "/data/language_models/";
             String dmozPath = path + "/lucene-DMOZ-index";
             String logPath = path + "/user-search-log/";
             String docPath = path + "/data/ODP-doc-content.xml";
             
-            
-            LoadLanguageModel llm = new LoadLanguageModel(ReferencePath, false, false);
+            HashMap<String, Double> refModel = Util.loadRefModel(ReferencePath);
+            LoadLanguageModel llm = new LoadLanguageModel(refModel, false, false);
             llm.loadModels(docPath, 4);
-            langModels = llm.getLanguageModels();
-            GQ = new GenerateCoverQuery(langModels, dmozPath, logPath);
-            GQ.setParameter(false, false);
+            ArrayList<LanguageModel> langModels = llm.getLanguageModels();
+            IntentAwarePrivacy IAP = new IntentAwarePrivacy(langModels, refModel, dmozPath);
+            IAP.setTokenizer(false, false);
 	}
     
         
@@ -117,9 +98,16 @@ public class Servlet extends HttpServlet {
             //process input and generate result
             //use Java server to generate n-1 cover queries
             ArrayList<String> coverQueries = GQ.generateNCoverQueries(input, time, uid, numcover - 1);
-            File f = new File("/Users/Lucius/Documents/data/user-search-log/" + uid + ".txt");
+            //File f = new File("/Users/Lucius/Documents/data/user-search-log/" + uid + ".txt");
+            //File f = new File("/home/ubuntu/java_servlet/data/user-search-log/" + uid + ".txt");
+            File f = new File("/home/ubuntu/data/user-search-log/" + uid + ".txt");
             String log = FileReader.GetLastLine(f);
+            System.out.println(log);
             String[] splits = log.split("<>");
+            System.out.println(splits.length);
+            for (int i = 0; i < splits.length; i++) {
+                System.out.println(i + ": " + splits[i]);
+            }
             String input_topic = splits[3];
             //store the original query and cover queries into db by JDBC
             //Input: uid, time, query, tag (1 = real, 0 = cover)

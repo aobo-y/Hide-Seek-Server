@@ -25,11 +25,11 @@ public class JDBC {
     
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
     // JDBC driver name and database URL
-    static final String DB_URL = "jdbc:mysql://hcdm.cs.virginia.edu/";
-
+    // static final String DB_URL = "jdbc:mysql://hcdm.cs.virginia.edu/";
+    static final String DB_URL = "jdbc:mysql://localhost:3306/";
     //  Database credentials
-    static final String USER = "chrome";
-    static final String PASS = "cover_queries";
+    static final String USER = "puxuan";
+    static final String PASS = "astro611";
    
     public static boolean checkUser(String uid) {
         Connection conn = null;
@@ -306,11 +306,7 @@ public class JDBC {
             String sql;
             sql = "use ChromeExtension;";
             stmt.executeQuery(sql);
-            
-            //Insert Record
-//            sql = "INSERT INTO clicks " +
-//            "VALUES ('" + uid + "', '" + time + "', '" + query + "', '" + url + "', " + click + ")";
-//            stmt.executeUpdate(sql);      
+                  
             sql = "INSERT INTO clicks VALUES (?,?,?,?,?)";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, uid);
@@ -363,13 +359,14 @@ public class JDBC {
           
     }
      
-    // HTTP GET request
+    // get one cover query from python program
     public static String getCover(String query) throws Exception {
 
     String USER_AGENT = "Mozilla/5.0";   
     String q = URLEncoder.encode(query, "UTF-8");
-    String urlString = "http://34.227.11.14:8000/cover/?query=" + q;
-
+    //String urlString = "http://34.227.11.14:8000/cover/?query=" + q;
+    String urlString = "http://120.77.42.144:8000/cover/?query=" + q;
+    
      URL url = new URL(urlString);
      HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
