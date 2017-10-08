@@ -25,8 +25,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 import java.util.Random;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -34,8 +37,8 @@ import java.util.HashMap;
  */
 @WebServlet(urlPatterns = {"/QueryGenerator"})
 public class Servlet extends HttpServlet {
-    
-    String uid;
+   
+    IntentAwarePrivacy IAP;
     
         @Override
 	public void init() {
@@ -179,7 +182,19 @@ public class Servlet extends HttpServlet {
                 JDBC.registerUser(uid);
             } else if (action.equals("U")) {
                 // 重排序，根据传过来的snippet，返回顺序
-                
+                String[] jsonData = request.getParameterValues("json");
+                String uid = request.getParameter("uid");
+                String userProfile = JDBC.getProfile(uid);
+                Integer[] arr = IAP.reRankDocuments(jsonData, userProfile);
+                int[] intArray = Arrays.stream(arr).mapToInt(Integer::intValue).toArray();
+                PrintWriter out = response.getWriter();
+                JSONObject jo = new JSONObject();
+                for (int i = 0; i < intArray.length; i++) {
+                    jo.put(i, intArray[i]);
+                }
+                // JSONArray 没法用，所以发回去的是比较复杂的数据结构，用JS再解析吧，反正数据小
+                out.print(jo.toJSONString());
+                out.flush();
             } else if (action.equals("UC")) {
                 // 存储用户点击，修改user profile
             } else if (action.equals("SC")) {

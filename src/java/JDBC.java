@@ -92,7 +92,7 @@ public class JDBC {
     public static void registerUser(String uid) {
         Connection conn = null;
         Statement stmt = null;
-        try{
+        try {
             Class.forName("com.mysql.jdbc.Driver");
             System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
@@ -108,27 +108,68 @@ public class JDBC {
             System.out.println("Inserted records into the table...");
             stmt.close();
             conn.close();
-        }catch(SQLException se){
-           //Handle errors for JDBC
+        } catch (SQLException se) {
            se.printStackTrace();
-        }catch(Exception e){
-           //Handle errors for Class.forName
+        } catch (Exception e) {
            e.printStackTrace();
-        }finally{
-           //finally block used to close resources
-           try{
-              if(stmt!=null)
-                 stmt.close();
-           }catch(SQLException se2){
+        } finally {
+           try {
+              if (stmt != null)
+                stmt.close();
+           } catch (SQLException se2) {
                
            }
-           try{
-              if(conn!=null)
-                 conn.close();
-           }catch(SQLException se){
+           try {
+              if (conn != null)
+                conn.close();
+           } catch (SQLException se) {
               se.printStackTrace();
            }
         }
+    }
+    
+    public static String getProfile(String uid) {
+        Connection conn = null;
+        Statement stmt = null;
+        String profile = null;
+        ResultSet rs;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            System.out.println("Connecting to database...");
+            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+            stmt = conn.createStatement();
+            String sql;
+            sql = "SELECT profile FROM chrome.Users WHERE userID = ?";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, uid);
+                rs = statement.executeQuery();
+            }
+            while (rs.next()) {
+                profile = rs.getString("profile");
+                return profile;
+            }
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException se) {
+           se.printStackTrace();
+        } catch (Exception e) {
+           e.printStackTrace();
+        } finally {
+           try {
+              if (stmt != null)
+                stmt.close();
+           } catch (SQLException se2) {
+               
+           }
+           try {
+              if (conn != null)
+                conn.close();
+           } catch (SQLException se) {
+              se.printStackTrace();
+           }
+        }
+        return "";
     }
     
     public static String getPrevious(String uid, String time) {
