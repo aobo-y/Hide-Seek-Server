@@ -197,8 +197,29 @@ public class Servlet extends HttpServlet {
                 out.flush();
             } else if (action.equals("UC")) {
                 // 存储用户点击，修改user profile
+                String uid = request.getParameter("uid");
+                String snippet = request.getParameter("snip");
+                String query = request.getParameter("query");
+                int idx = Integer.valueOf(request.getParameter("click"));
+                String url = request.getParameter("url");
+                String title = request.getParameter("content");
+                
+                // save user clicks
+                JDBC.saveClick(uid, url, title, query, 1, idx, time);
+                // update profile
+                String profile = JDBC.getProfile(uid);
+                String newProfile = IAP.updateProfileUsingClick(snippet, profile);
+                JDBC.saveProfile(uid, newProfile);
             } else if (action.equals("SC")) {
                 // 存储模拟点击
+                String uid = request.getParameter("uid");
+                String query = request.getParameter("query");
+                int idx = Integer.valueOf(request.getParameter("click"));
+                String url = request.getParameter("url");
+                String title = request.getParameter("content");
+                
+                // save simulated clicks
+                JDBC.saveClick(uid, url, title, query, 0, idx, time);
             } else if (action.equals("Q")) {
                 // 存储query，返回cover queries以及相关信息，修改user profile
             }

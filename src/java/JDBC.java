@@ -172,6 +172,90 @@ public class JDBC {
         return "";
     }
     
+    public static void saveClick(String uid, String url, String title, String query, int tag, int idx, String time) {
+        Connection conn = null;
+        Statement stmt = null;
+        try{
+            Class.forName("com.mysql.jdbc.Driver");
+            System.out.println("Connecting to database...");
+            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+            System.out.println("Creating statement...");
+            stmt = conn.createStatement();
+            String sql;
+            sql = "INSERT INTO chrome.Clicks VALUES (?,?,?,?,?,?,?)";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, uid);
+                statement.setString(2, url);
+                statement.setString(3, title);
+                statement.setString(4, query);
+                statement.setInt(5, tag);
+                statement.setInt(6, idx);
+                statement.setString(7, time);
+                statement.executeUpdate();
+            }
+            System.out.println("Inserted records into the table...");
+            stmt.close();
+            conn.close();
+        }catch(SQLException se){
+           se.printStackTrace();
+        }catch(Exception e){
+           e.printStackTrace();
+        }finally{
+           try{
+              if(stmt!=null)
+                 stmt.close();
+           }catch(SQLException se2){
+               
+           }
+           try{
+              if(conn!=null)
+                 conn.close();
+           }catch(SQLException se){
+              se.printStackTrace();
+           }
+        }
+    }
+    
+    public static void saveProfile(String uid, String profile) {
+        Connection conn = null;
+        Statement stmt = null;
+        try{
+            Class.forName("com.mysql.jdbc.Driver");
+            System.out.println("Connecting to database...");
+            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+            System.out.println("Creating statement...");
+            stmt = conn.createStatement();
+            String sql;
+            sql = "UPDATE chrome.Users SET profile = ? WHERE userID = ?";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, profile);
+                statement.setString(2, uid);
+            }
+            System.out.println("Inserted records into the table...");
+            stmt.close();
+            conn.close();
+        }catch(SQLException se){
+           se.printStackTrace();
+        }catch(Exception e){
+           e.printStackTrace();
+        }finally{
+           try{
+              if(stmt!=null)
+                 stmt.close();
+           }catch(SQLException se2){
+               
+           }
+           try{
+              if(conn!=null)
+                 conn.close();
+           }catch(SQLException se){
+              se.printStackTrace();
+           }
+        }
+    }
+    
+    
+    
     public static String getPrevious(String uid, String time) {
         Connection conn = null;
         Statement stmt = null;
@@ -372,60 +456,60 @@ public class JDBC {
     }
     
     
-    public static void saveClick(String uid, String time, String query, String url, int click) {
-        Connection conn = null;
-        Statement stmt = null;
-        try{
-            //STEP 2: Register JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
-
-            //STEP 3: Open a connection
-            System.out.println("Connecting to database...");
-            conn = DriverManager.getConnection(DB_URL,USER,PASS);
-
-            //STEP 4: Execute a query
-            System.out.println("Creating statement...");
-            stmt = conn.createStatement();
-            String sql;
-            sql = "use ChromeExtension;";
-            stmt.executeQuery(sql);
-                  
-            sql = "INSERT INTO clicks VALUES (?,?,?,?,?)";
-            try (PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setString(1, uid);
-                statement.setString(2, time);
-                statement.setString(3, query);
-                statement.setString(4, url);
-                statement.setInt(5, click);
-                statement.executeUpdate();
-            }
-            System.out.println("Inserted records into the table...");
-            System.out.println();
-            
-            //STEP 6: Clean-up environment
-            stmt.close();
-            conn.close();
-        }catch(SQLException se){
-           //Handle errors for JDBC
-           se.printStackTrace();
-        }catch(Exception e){
-           //Handle errors for Class.forName
-           e.printStackTrace();
-        }finally{
-           //finally block used to close resources
-           try{
-              if(stmt!=null)
-                 stmt.close();
-           }catch(SQLException se2){
-           }// nothing we can do
-           try{
-              if(conn!=null)
-                 conn.close();
-           }catch(SQLException se){
-              se.printStackTrace();
-           }
-        }
-    }
+//    public static void saveClick(String uid, String time, String query, String url, int click) {
+//        Connection conn = null;
+//        Statement stmt = null;
+//        try{
+//            //STEP 2: Register JDBC driver
+//            Class.forName("com.mysql.jdbc.Driver");
+//
+//            //STEP 3: Open a connection
+//            System.out.println("Connecting to database...");
+//            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+//
+//            //STEP 4: Execute a query
+//            System.out.println("Creating statement...");
+//            stmt = conn.createStatement();
+//            String sql;
+//            sql = "use ChromeExtension;";
+//            stmt.executeQuery(sql);
+//                  
+//            sql = "INSERT INTO clicks VALUES (?,?,?,?,?)";
+//            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+//                statement.setString(1, uid);
+//                statement.setString(2, time);
+//                statement.setString(3, query);
+//                statement.setString(4, url);
+//                statement.setInt(5, click);
+//                statement.executeUpdate();
+//            }
+//            System.out.println("Inserted records into the table...");
+//            System.out.println();
+//            
+//            //STEP 6: Clean-up environment
+//            stmt.close();
+//            conn.close();
+//        }catch(SQLException se){
+//           //Handle errors for JDBC
+//           se.printStackTrace();
+//        }catch(Exception e){
+//           //Handle errors for Class.forName
+//           e.printStackTrace();
+//        }finally{
+//           //finally block used to close resources
+//           try{
+//              if(stmt!=null)
+//                 stmt.close();
+//           }catch(SQLException se2){
+//           }// nothing we can do
+//           try{
+//              if(conn!=null)
+//                 conn.close();
+//           }catch(SQLException se){
+//              se.printStackTrace();
+//           }
+//        }
+//    }
     
     
      public static void main(String[] argv) throws Exception {
