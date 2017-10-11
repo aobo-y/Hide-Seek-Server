@@ -5,6 +5,9 @@
  */
 
 //import edu.virginia.cs.model.GenerateCoverQuery;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import edu.virginia.cs.object.Query;
 import edu.virginia.cs.model.LanguageModel;
 import edu.virginia.cs.model.LoadLanguageModel;
 import edu.virginia.cs.utility.FileReader;
@@ -30,6 +33,7 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.List;
+import java.util.*;
 
 /**
  *
@@ -55,7 +59,7 @@ public class Servlet extends HttpServlet {
             LoadLanguageModel llm = new LoadLanguageModel(refModel, false, false);
             llm.loadModels(docPath, 4);
             ArrayList<LanguageModel> langModels = llm.getLanguageModels();
-            IntentAwarePrivacy IAP = new IntentAwarePrivacy(langModels, refModel, dmozPath);
+            IAP = new IntentAwarePrivacy(langModels, refModel, dmozPath);
             IAP.setTokenizer(false, false);
 	}
     
@@ -72,7 +76,7 @@ public class Servlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
         //GET request for cover query generatigon
         if(request.getMethod().equals("GET")){
 //            //get input from client
@@ -171,9 +175,7 @@ public class Servlet extends HttpServlet {
             //uid is already store locally
             //timestamp is generated here
             Date dNow = new Date();
-            SimpleDateFormat ft = 
-            new SimpleDateFormat ("yyyy-MM-dd hh:mm:ss");
-            String time = ft.format(dNow);
+            String time = Util.convertDateToString(dNow);
             
             String action = request.getParameter("action");
             if (action.equals("R")) {
@@ -186,15 +188,18 @@ public class Servlet extends HttpServlet {
                 String uid = request.getParameter("uid");
                 String userProfile = JDBC.getProfile(uid);
                 Integer[] arr = IAP.reRankDocuments(jsonData, userProfile);
-                int[] intArray = Arrays.stream(arr).mapToInt(Integer::intValue).toArray();
-                PrintWriter out = response.getWriter();
-                JSONObject jo = new JSONObject();
-                for (int i = 0; i < intArray.length; i++) {
-                    jo.put(i, intArray[i]);
-                }
-                // JSONArray 没法用，所以发回去的是比较复杂的数据结构，用JS再解析吧，反正数据小
-                out.print(jo.toJSONString());
-                out.flush();
+//                int[] intArray = Arrays.stream(arr).mapToInt(Integer::intValue).toArray();
+//                PrintWriter out = response.getWriter();
+//                JSONObject jo = new JSONObject();
+//                for (int i = 0; i < intArray.length; i++) {
+//                    jo.put(i, intArray[i]);
+//                }
+//                // JSONArray 没法用，所以发回去的是比较复杂的数据结构，用JS再解析吧，反正数据小
+//                out.print(jo.toJSONString());
+//                out.flush();
+                List<Integer> intList = Arrays.asList(arr);
+                String json = new Gson().toJson(intList);
+                response.getWriter().write(json);
             } else if (action.equals("UC")) {
                 // 存储用户点击，修改user profile
                 String uid = request.getParameter("uid");
@@ -222,6 +227,69 @@ public class Servlet extends HttpServlet {
                 JDBC.saveClick(uid, url, title, query, 0, idx, time);
             } else if (action.equals("Q")) {
                 // 存储query，返回cover queries以及相关信息，修改user profile
+                String uid = request.getParameter("uid");
+                String query = request.getParameter("query");
+                int numCover = Integer.parseInt(request.getParameter("numcover"));
+                Query curQuery = IAP.getQueryTopic("query");
+                ArrayList<Query> coverQueries;
+                int sessionNo = 0;
+                int actionNo = 0;
+                String sentToPython = "null";
+                String pythonQuery = null;
+                Query pQuery = new Query();
+                Map<String, String> map = new LinkedHashMap<>();
+                
+                // 获得java的cover queries
+                if (JDBC.getPreviousCoverQueryData(uid) == null) {
+                    // 有史以来第一次查询
+                    coverQueries = IAP.getCoverQueries(curQuery, numCover);
+                    //
+                } else {
+                    // 之前有过action
+                    QueryData qd = JDBC.getPreviousCoverQueryData(uid);
+                    actionNo = qd.getActionID() + 1;
+                    Query prevQuery = qd.getUserQuery();
+                    Date previousTime = Util.convertStringToDate(qd.getTime());
+                    if (Util.checkSameSession_time(previousTime, dNow)) {
+                        // 同一个session
+                        int sequentialEdited = IAP.checkSequentialEdited(curQuery, prevQuery);
+                        coverQueries = IAP.getCoverQueriesInSession(curQuery, qd.getCoverQueryList(), numCover, sequentialEdited);
+                        sentToPython = qd.getPythonQuery().getQueryText();
+                    } else {
+                        // 不同session
+                        coverQueries = IAP.getCoverQueries(curQuery, numCover);
+                        sessionNo = qd.getSessionID() + 1;
+                    }
+                }
+                
+                // 获得python的cover queries
+                try {
+                    pythonQuery = JDBC.getCover(sentToPython);
+                    pQuery = IAP.getQueryTopic(pythonQuery);
+                } catch (Exception ex) {
+                    Logger.getLogger(Servlet.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                // 迅速把结果返回给用户
+                for (Query q: coverQueries) {
+                    map.put(q.getQueryText(), q.getQueryTopic());
+                }
+                map.put("input", curQuery.getQueryTopic());
+                map.put(pQuery.getQueryText(), pQuery.getQueryTopic());
+                String json = new Gson().toJson(map);
+                response.getWriter().write(json);
+                
+                // 存储数据至数据库
+                JDBC.saveQuery(curQuery, actionNo, sessionNo, 0, uid, time);
+                for (Query q: coverQueries) {
+                    JDBC.saveQuery(q, actionNo, sessionNo, 1, uid, time);
+                }
+                JDBC.saveQuery(pQuery, actionNo, sessionNo, 2, uid, time);
+                
+                // 更新用户档案
+                String profile = JDBC.getProfile(uid);
+                String newProfile = IAP.updateProfileUsingQuery(curQuery, profile);
+                JDBC.saveProfile(uid, newProfile);
             }
 
             //query
@@ -235,37 +303,37 @@ public class Servlet extends HttpServlet {
                 return;
             }
 
-            //url
-            String url = request.getParameter("url");
-
-            //click           
-            String click = request.getParameter("click");
-            int clickIndex = Integer.valueOf(click);         
-            
-            //content
-            String content = request.getParameter("content"); 
-            
-            uid = request.getParameter("id");
-            
-            System.out.println(uid + time + query + url + clickIndex);
-
-            //save Clicks table
-            try {
-                JDBC.saveClick(uid, time, query, url, clickIndex);
-                //save URLs table
-                JDBC.saveURL(url, content, query);  
-            } catch(Exception e) {
-                PrintWriter out = response.getWriter();
-                JSONObject obj = new JSONObject(); 
-                obj.put("db","error");
-                out.print(obj.toJSONString());
-                out.flush();
-            }
-            PrintWriter out = response.getWriter();
-            JSONObject obj = new JSONObject(); 
-            obj.put("db","success");
-            out.print(obj.toJSONString());
-            out.flush();
+//            //url
+//            String url = request.getParameter("url");
+//
+//            //click           
+//            String click = request.getParameter("click");
+//            int clickIndex = Integer.valueOf(click);         
+//            
+//            //content
+//            String content = request.getParameter("content"); 
+//            
+//            uid = request.getParameter("id");
+//            
+//            System.out.println(uid + time + query + url + clickIndex);
+//
+//            //save Clicks table
+//            try {
+//                JDBC.saveClick(uid, time, query, url, clickIndex);
+//                //save URLs table
+//                JDBC.saveURL(url, content, query);  
+//            } catch(Exception e) {
+//                PrintWriter out = response.getWriter();
+//                JSONObject obj = new JSONObject(); 
+//                obj.put("db","error");
+//                out.print(obj.toJSONString());
+//                out.flush();
+//            }
+//            PrintWriter out = response.getWriter();
+//            JSONObject obj = new JSONObject(); 
+//            obj.put("db","success");
+//            out.print(obj.toJSONString());
+//            out.flush();
         }      
         
     }
@@ -285,7 +353,6 @@ public class Servlet extends HttpServlet {
         System.out.println("Get");
         response.addHeader("Access-Control-Allow-Origin", "*");
         processRequest(request, response);
-        
     }
 
     /**
