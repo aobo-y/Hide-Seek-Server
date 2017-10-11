@@ -178,16 +178,24 @@ public class Servlet extends HttpServlet {
             String time = Util.convertDateToString(dNow);
             
             String action = request.getParameter("action");
+            System.out.println("~~~~~" + action);
             if (action.equals("R")) {
                 // 注册用户
                 String uid = request.getParameter("uid");
                 JDBC.registerUser(uid);
             } else if (action.equals("U")) {
                 // 重排序，根据传过来的snippet，返回顺序
-                String[] jsonData = request.getParameterValues("json");
+                System.out.println("~~~~~ INSIDE U");
+                String[] jsonData = request.getParameterValues("json[]");
                 String uid = request.getParameter("uid");
                 String userProfile = JDBC.getProfile(uid);
+//                for (String s: jsonData) {
+//                    System.out.println(s);
+//                }
                 Integer[] arr = IAP.reRankDocuments(jsonData, userProfile);
+                for (Integer i: arr) {
+                    System.out.print(i + ",");
+                }
 //                int[] intArray = Arrays.stream(arr).mapToInt(Integer::intValue).toArray();
 //                PrintWriter out = response.getWriter();
 //                JSONObject jo = new JSONObject();
@@ -242,21 +250,50 @@ public class Servlet extends HttpServlet {
                 // 获得java的cover queries
                 if (JDBC.getPreviousCoverQueryData(uid) == null) {
                     // 有史以来第一次查询
+                    System.out.println("这里请选1");
                     coverQueries = IAP.getCoverQueries(curQuery, numCover);
                     //
                 } else {
                     // 之前有过action
                     QueryData qd = JDBC.getPreviousCoverQueryData(uid);
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println(qd.getActionID());
+                    System.out.println(qd.getSessionID());
+                    System.out.println(qd.getTime());
+                    for (Query q: qd.getCoverQueryList()) {
+                        System.out.println("===============");
+                        System.out.println(q.getQueryText());
+                        System.out.println(q.getQueryLength());
+                        System.out.println(q.getQueryTopic());
+                        System.out.println(q.getQueryTopicNo());
+                        System.out.println(q.getBucketNo());
+                    }
                     actionNo = qd.getActionID() + 1;
                     Query prevQuery = qd.getUserQuery();
                     Date previousTime = Util.convertStringToDate(qd.getTime());
                     if (Util.checkSameSession_time(previousTime, dNow)) {
-                        // 同一个session
+                        // same session
                         int sequentialEdited = IAP.checkSequentialEdited(curQuery, prevQuery);
+                        System.out.println("===============");
+                        System.out.println("Current Query:");
+                        System.out.println(curQuery.getQueryText() + ", " + curQuery.getQueryLength() + ", " + curQuery.getQueryTopic() + ", " + curQuery.getQueryTopicNo() + ", " + curQuery.getBucketNo());
+                        System.out.println("===============");
+                        System.out.println("Previous java queries:");
+                        System.out.println("===============");
+                        for (Query q: qd.getCoverQueryList()) {
+                            System.out.println(q.getQueryText() + ", " + q.getQueryLength() + ", " + q.getQueryTopic() + ", " + q.getQueryTopicNo() + ", " + q.getBucketNo());
+                            System.out.println("===============");
+                        }
+                        System.out.println(numCover + ", " + sequentialEdited);
                         coverQueries = IAP.getCoverQueriesInSession(curQuery, qd.getCoverQueryList(), numCover, sequentialEdited);
+                        System.out.println("before");
+                        System.out.println(null == coverQueries);
+                        System.out.println("after");
                         sentToPython = qd.getPythonQuery().getQueryText();
                     } else {
                         // 不同session
+                        System.out.println("这里请选3");
                         coverQueries = IAP.getCoverQueries(curQuery, numCover);
                         sessionNo = qd.getSessionID() + 1;
                     }
@@ -265,7 +302,9 @@ public class Servlet extends HttpServlet {
                 // 获得python的cover queries
                 try {
                     pythonQuery = JDBC.getCover(sentToPython);
+                    System.out.println("hello" + pythonQuery);
                     pQuery = IAP.getQueryTopic(pythonQuery);
+                    System.out.println("hello!!!!!" + pQuery.getQueryText() + pQuery.getQueryTopic());
                 } catch (Exception ex) {
                     Logger.getLogger(Servlet.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -273,9 +312,13 @@ public class Servlet extends HttpServlet {
                 // 迅速把结果返回给用户
                 for (Query q: coverQueries) {
                     map.put(q.getQueryText(), q.getQueryTopic());
+                    System.out.println("能看到我吗");
+                    System.out.println(q.getQueryText() + "," + q.getQueryTopic());
                 }
                 map.put("input", curQuery.getQueryTopic());
                 map.put(pQuery.getQueryText(), pQuery.getQueryTopic());
+                System.out.println("input" + "," + curQuery.getQueryTopic());
+                System.out.println(pQuery.getQueryText() + "," + pQuery.getQueryTopic());
                 String json = new Gson().toJson(map);
                 response.getWriter().write(json);
                 

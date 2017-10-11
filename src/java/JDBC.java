@@ -132,7 +132,6 @@ public class JDBC {
         Connection conn = null;
         Statement stmt = null;
         String profile = null;
-        ResultSet rs;
         try {
             Class.forName("com.mysql.jdbc.Driver");
             System.out.println("Connecting to database...");
@@ -140,10 +139,11 @@ public class JDBC {
             stmt = conn.createStatement();
             String sql;
             sql = "SELECT profile FROM chrome.Users WHERE userID = ?";
-            try (PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setString(1, uid);
-                rs = statement.executeQuery();
-            }
+            ResultSet rs;
+            PreparedStatement statement = conn.prepareStatement(sql);
+            statement.setString(1, uid);
+            rs = statement.executeQuery();
+            
             while (rs.next()) {
                 profile = rs.getString("profile");
             }
@@ -174,7 +174,6 @@ public class JDBC {
     public static QueryData getPreviousCoverQueryData(String uid) {
         Connection conn = null;
         Statement stmt = null;
-        ResultSet rs;
         QueryData qd = new QueryData();
         Query uq = new Query();
         Query pq = new Query();
@@ -185,12 +184,13 @@ public class JDBC {
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
             stmt = conn.createStatement();
             String sql;
+            ResultSet rs;
             sql = "SELECT * FROM chrome.Queries WHERE actionID = (SELECT MAX(actionID) FROM chrome.Queries WHERE userID = ?) AND userID = ?";
-            try (PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setString(1, uid);
-                statement.setString(2, uid);
-                rs = statement.executeQuery();
-            }
+            PreparedStatement statement = conn.prepareStatement(sql);
+            statement.setString(1, uid);
+            statement.setString(2, uid);
+            rs = statement.executeQuery();
+            
             if (!rs.next()) {
                 // no previous action
                 return null;
@@ -654,33 +654,31 @@ public class JDBC {
     // get one cover query from python program
     public static String getCover(String query) throws Exception {
 
-    String USER_AGENT = "Mozilla/5.0";   
-    String q = URLEncoder.encode(query, "UTF-8");
-    String urlString = "http://120.77.42.144:8000/cover/?query=" + q;
-    
-     URL url = new URL(urlString);
-     HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        String USER_AGENT = "Mozilla/5.0";   
+        String q = URLEncoder.encode(query, "UTF-8");
+        String urlString = "http://120.77.42.144:8000/cover/?query=" + q;
 
-     // By default it is GET request
-     con.setRequestMethod("GET");
+        URL url = new URL(urlString);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
 
-     //add request header
-     con.setRequestProperty("User-Agent", USER_AGENT);
+        con.setRequestProperty("User-Agent", USER_AGENT);
 
-     int responseCode = con.getResponseCode();
-     System.out.println("Sending get request : "+ url);
-     System.out.println("Response code : "+ responseCode);
+        int responseCode = con.getResponseCode();
+        System.out.println("Sending get request : "+ url);
+        System.out.println("Response code : "+ responseCode);
 
-     // Reading response from input Stream
-     BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-     String output;
-     StringBuffer response = new StringBuffer();
+        // Reading response from input Stream
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String output;
+        StringBuffer response = new StringBuffer();
 
-     while ((output = in.readLine()) != null) {
-        response.append(output);
-     }
-     in.close();
-     return response.toString();
+        while ((output = in.readLine()) != null) {
+            response.append(output);
+        }
+        in.close();
+        System.out.println(response.toString());
+        return response.toString();
     } 
 
 
