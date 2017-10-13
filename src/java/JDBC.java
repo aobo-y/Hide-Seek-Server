@@ -338,7 +338,7 @@ public class JDBC {
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
             stmt = conn.createStatement();
             String sql;
-            sql = "UPDATE Users SET profile = ? WHERE userID = ?";
+            sql = "UPDATE Users AS u SET u.profile = ? WHERE userID = ?";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, profile);
                 statement.setString(2, uid);

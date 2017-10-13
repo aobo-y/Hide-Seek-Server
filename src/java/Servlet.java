@@ -6,18 +6,12 @@
 
 //import edu.virginia.cs.model.GenerateCoverQuery;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import edu.virginia.cs.object.Query;
 import edu.virginia.cs.model.LanguageModel;
 import edu.virginia.cs.model.LoadLanguageModel;
-import edu.virginia.cs.utility.FileReader;
 import edu.virginia.cs.utility.Util;
 import edu.virginia.cs.model.IntentAwarePrivacy;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
@@ -27,9 +21,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
-import java.util.Random;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.List;
@@ -210,6 +201,9 @@ public class Servlet extends HttpServlet {
                 response.getWriter().write(json);
             } else if (action.equals("UC")) {
                 // 存储用户点击，修改user profile
+                
+                System.out.println("USER CLICK");
+                
                 String uid = request.getParameter("uid");
                 String snippet = request.getParameter("snip");
                 String query = request.getParameter("query");
@@ -221,7 +215,11 @@ public class Servlet extends HttpServlet {
                 JDBC.saveClick(uid, url, title, query, 1, idx, time);
                 // update profile
                 String profile = JDBC.getProfile(uid);
+                System.out.println("old profile equals \"\":" + profile.equals(""));
+                System.out.println("snippet:" + snippet);
                 String newProfile = IAP.updateProfileUsingClick(snippet, profile);
+                System.out.println("new profile");
+                System.out.println(newProfile);
                 JDBC.saveProfile(uid, newProfile);
             } else if (action.equals("SC")) {
                 // 存储模拟点击
@@ -230,6 +228,10 @@ public class Servlet extends HttpServlet {
                 int idx = Integer.valueOf(request.getParameter("click"));
                 String url = request.getParameter("url");
                 String title = request.getParameter("content");
+                
+                System.out.println("uid: " + uid);
+                System.out.println("url: " + url);
+                System.out.println("title: " + title);
                 
                 // save simulated clicks
                 JDBC.saveClick(uid, url, title, query, 0, idx, time);
@@ -310,8 +312,12 @@ public class Servlet extends HttpServlet {
                 
                 // 更新用户档案
                 String profile = JDBC.getProfile(uid);
+                System.out.println("old profile: " + profile);
+                System.out.println("user query: " + curQuery.getQueryText());
                 String newProfile = IAP.updateProfileUsingQuery(curQuery, profile);
+                System.out.println(newProfile);
                 JDBC.saveProfile(uid, newProfile);
+                System.out.println(JDBC.getProfile(uid));
             }
 
 //            //query
