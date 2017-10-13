@@ -238,7 +238,7 @@ public class Servlet extends HttpServlet {
                 String uid = request.getParameter("uid");
                 String query = request.getParameter("query");
                 int numCover = Integer.parseInt(request.getParameter("numcover"));
-                Query curQuery = IAP.getQueryTopic("query");
+                Query curQuery = IAP.getQueryTopic(query);
                 ArrayList<Query> coverQueries;
                 int sessionNo = 0;
                 int actionNo = 0;
@@ -256,40 +256,18 @@ public class Servlet extends HttpServlet {
                 } else {
                     // 之前有过action
                     QueryData qd = JDBC.getPreviousCoverQueryData(uid);
-                    System.out.println("~~~~~~~~~~~~~~~~~~~~");
-                    System.out.println("~~~~~~~~~~~~~~~~~~~~");
-                    System.out.println(qd.getActionID());
-                    System.out.println(qd.getSessionID());
-                    System.out.println(qd.getTime());
-                    for (Query q: qd.getCoverQueryList()) {
-                        System.out.println("===============");
-                        System.out.println(q.getQueryText());
-                        System.out.println(q.getQueryLength());
-                        System.out.println(q.getQueryTopic());
-                        System.out.println(q.getQueryTopicNo());
-                        System.out.println(q.getBucketNo());
-                    }
                     actionNo = qd.getActionID() + 1;
                     Query prevQuery = qd.getUserQuery();
                     Date previousTime = Util.convertStringToDate(qd.getTime());
                     if (Util.checkSameSession_time(previousTime, dNow)) {
                         // same session
+                        sessionNo = qd.getSessionID();
                         int sequentialEdited = IAP.checkSequentialEdited(curQuery, prevQuery);
-                        System.out.println("===============");
-                        System.out.println("Current Query:");
-                        System.out.println(curQuery.getQueryText() + ", " + curQuery.getQueryLength() + ", " + curQuery.getQueryTopic() + ", " + curQuery.getQueryTopicNo() + ", " + curQuery.getBucketNo());
-                        System.out.println("===============");
-                        System.out.println("Previous java queries:");
-                        System.out.println("===============");
-                        for (Query q: qd.getCoverQueryList()) {
-                            System.out.println(q.getQueryText() + ", " + q.getQueryLength() + ", " + q.getQueryTopic() + ", " + q.getQueryTopicNo() + ", " + q.getBucketNo());
-                            System.out.println("===============");
+                        if (sequentialEdited == 0) {
+                            coverQueries = IAP.getCoverQueries(curQuery, numCover);
+                        } else {
+                            coverQueries = IAP.getCoverQueriesIfSeqEdited(curQuery, qd.getCoverQueryList(), numCover, sequentialEdited);
                         }
-                        System.out.println(numCover + ", " + sequentialEdited);
-                        coverQueries = IAP.getCoverQueriesInSession(curQuery, qd.getCoverQueryList(), numCover, sequentialEdited);
-                        System.out.println("before");
-                        System.out.println(null == coverQueries);
-                        System.out.println("after");
                         sentToPython = qd.getPythonQuery().getQueryText();
                     } else {
                         // 不同session
@@ -302,9 +280,7 @@ public class Servlet extends HttpServlet {
                 // 获得python的cover queries
                 try {
                     pythonQuery = JDBC.getCover(sentToPython);
-                    System.out.println("hello" + pythonQuery);
                     pQuery = IAP.getQueryTopic(pythonQuery);
-                    System.out.println("hello!!!!!" + pQuery.getQueryText() + pQuery.getQueryTopic());
                 } catch (Exception ex) {
                     Logger.getLogger(Servlet.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -312,11 +288,14 @@ public class Servlet extends HttpServlet {
                 // 迅速把结果返回给用户
                 for (Query q: coverQueries) {
                     map.put(q.getQueryText(), q.getQueryTopic());
-                    System.out.println("能看到我吗");
                     System.out.println(q.getQueryText() + "," + q.getQueryTopic());
                 }
-                map.put("input", curQuery.getQueryTopic());
-                map.put(pQuery.getQueryText(), pQuery.getQueryTopic());
+                if (null != curQuery.getQueryTopic()) {
+                    map.put("input", curQuery.getQueryTopic());
+                }
+                if (null != pQuery.getQueryTopic()) {
+                    map.put(pQuery.getQueryText(), pQuery.getQueryTopic());
+                }
                 System.out.println("input" + "," + curQuery.getQueryTopic());
                 System.out.println(pQuery.getQueryText() + "," + pQuery.getQueryTopic());
                 String json = new Gson().toJson(map);
@@ -335,16 +314,16 @@ public class Servlet extends HttpServlet {
                 JDBC.saveProfile(uid, newProfile);
             }
 
-            //query
-            String query = request.getParameter("query");
-            if(query == "" || query == null) {
-                PrintWriter out = response.getWriter();
-                JSONObject obj = new JSONObject();
-                obj.put("output1","null"); 
-                out.print(obj.toJSONString());
-                out.flush();
-                return;
-            }
+//            //query
+//            String query = request.getParameter("query");
+//            if(query == "" || query == null) {
+//                PrintWriter out = response.getWriter();
+//                JSONObject obj = new JSONObject();
+//                obj.put("output1","null"); 
+//                out.print(obj.toJSONString());
+//                out.flush();
+//                return;
+//            }
 
 //            //url
 //            String url = request.getParameter("url");

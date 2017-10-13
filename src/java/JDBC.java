@@ -9,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import edu.virginia.cs.object.Query;
 /*
@@ -27,85 +26,82 @@ public class JDBC {
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
     // JDBC driver name and database URL
     // static final String DB_URL = "jdbc:mysql://hcdm.cs.virginia.edu/";
-    static final String DB_URL = "jdbc:mysql://localhost:3306/";
+    static final String DB_URL = "jdbc:mysql://localhost:3306/chrome?verifyServerCertificate=false&useSSL=true";
     //  Database credentials
     static final String USER = "puxuan";
     static final String PASS = "astro611";
    
-    public static boolean checkUser(String uid) {
-        Connection conn = null;
-        Statement stmt = null;
-        boolean result = false;
-        try{
-            //STEP 2: Register JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
-
-            //STEP 3: Open a connection
-            System.out.println("Connecting to database...");
-            conn = DriverManager.getConnection(DB_URL,USER,PASS);
-
-            //STEP 4: Execute a query
-            System.out.println("Creating statement...");
-            stmt = conn.createStatement();
-            String sql;
-            sql = "use ChromeExtension;";
-            stmt.executeQuery(sql);
-            
-            //Insert Record
-            sql = "SELECT * from query where uid ='" + uid + "'";   
-            System.out.println("Checking records...");
-            System.out.println();
-            ResultSet rs = stmt.executeQuery(sql);
-            //STEP 5: Extract data from result set
-            while(rs.next()){
-               //Retrieve by column name
-               return true;
-            }
-            rs.close();
-
-            //STEP 6: Clean-up environment
-            stmt.close();
-            conn.close();
-        }catch(SQLException se){
-           //Handle errors for JDBC
-           se.printStackTrace();
-        }catch(Exception e){
-           //Handle errors for Class.forName
-           e.printStackTrace();
-        }finally{
-           //finally block used to close resources
-           try{
-              if(stmt!=null)
-                 stmt.close();
-           }catch(SQLException se2){
-           }// nothing we can do
-           try{
-              if(conn!=null)
-                 conn.close();
-           }catch(SQLException se){
-              se.printStackTrace();
-           }
-        }
-        return result;
-    }
+//    public static boolean checkUser(String uid) {
+//        Connection conn = null;
+//        Statement stmt = null;
+//        boolean result = false;
+//        try{
+//            //STEP 2: Register JDBC driver
+//            Class.forName("com.mysql.jdbc.Driver");
+//
+//            //STEP 3: Open a connection
+//            System.out.println("Connecting to database...");
+//            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+//
+//            //STEP 4: Execute a query
+//            System.out.println("Creating statement...");
+//            stmt = conn.createStatement();
+//            String sql;
+//            sql = "use ChromeExtension;";
+//            stmt.executeQuery(sql);
+//            
+//            //Insert Record
+//            sql = "SELECT * from query where uid ='" + uid + "'";   
+//            System.out.println("Checking records...");
+//            System.out.println();
+//            ResultSet rs = stmt.executeQuery(sql);
+//            //STEP 5: Extract data from result set
+//            while(rs.next()){
+//               //Retrieve by column name
+//               return true;
+//            }
+//            rs.close();
+//
+//            //STEP 6: Clean-up environment
+//            stmt.close();
+//            conn.close();
+//        }catch(SQLException se){
+//           //Handle errors for JDBC
+//           se.printStackTrace();
+//        }catch(Exception e){
+//           //Handle errors for Class.forName
+//           e.printStackTrace();
+//        }finally{
+//           //finally block used to close resources
+//           try{
+//              if(stmt!=null)
+//                 stmt.close();
+//           }catch(SQLException se2){
+//           }// nothing we can do
+//           try{
+//              if(conn!=null)
+//                 conn.close();
+//           }catch(SQLException se){
+//              se.printStackTrace();
+//           }
+//        }
+//        return result;
+//    }
     
     public static void registerUser(String uid) {
         Connection conn = null;
         Statement stmt = null;
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
             stmt = conn.createStatement();
             String sql;
-            sql = "INSERT INTO chrome.Users VALUES (?,?)";
+            sql = "INSERT INTO Users VALUES (?,?)";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, uid);
                 statement.setString(2, "");
                 statement.executeUpdate();
             }
-            
-            System.out.println("Inserted records into the table...");
             stmt.close();
             conn.close();
         } catch (SQLException se) {
@@ -134,11 +130,10 @@ public class JDBC {
         String profile = null;
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT profile FROM chrome.Users WHERE userID = ?";
+            sql = "SELECT profile FROM Users WHERE userID = ?";
             ResultSet rs;
             PreparedStatement statement = conn.prepareStatement(sql);
             statement.setString(1, uid);
@@ -180,12 +175,11 @@ public class JDBC {
         ArrayList<Query> previousQueries = new ArrayList<>();
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
             stmt = conn.createStatement();
             String sql;
             ResultSet rs;
-            sql = "SELECT * FROM chrome.Queries WHERE actionID = (SELECT MAX(actionID) FROM chrome.Queries WHERE userID = ?) AND userID = ?";
+            sql = "SELECT * FROM Queries WHERE actionID = (SELECT MAX(actionID) FROM Queries WHERE userID = ?) AND userID = ?";
             PreparedStatement statement = conn.prepareStatement(sql);
             statement.setString(1, uid);
             statement.setString(2, uid);
@@ -255,12 +249,10 @@ public class JDBC {
         Statement stmt = null;
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
-            System.out.println("Creating statement...");
             stmt = conn.createStatement();
             String sql;
-            sql = "INSERT INTO chrome.Clicks VALUES (?,?,?,?,?,?,?)";
+            sql = "INSERT INTO Clicks VALUES (?,?,?,?,?,?,?)";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, uid);
                 statement.setString(2, url);
@@ -299,12 +291,10 @@ public class JDBC {
         Statement stmt = null;
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
-            System.out.println("Creating statement...");
             stmt = conn.createStatement();
             String sql;
-            sql = "INSERT INTO chrome.Queries VALUES (?,?,?,?,?,?,?,?,?,?)";
+            sql = "INSERT INTO Queries VALUES (?,?,?,?,?,?,?,?,?,?)";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setInt(1, a);
                 statement.setInt(2, s);
@@ -318,7 +308,6 @@ public class JDBC {
                 statement.setString(10, time);
                 statement.executeUpdate();
             }
-            System.out.println("Inserted records into the table...");
             stmt.close();
             conn.close();
         }catch(SQLException se){
@@ -346,17 +335,14 @@ public class JDBC {
         Statement stmt = null;
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
-            System.out.println("Creating statement...");
             stmt = conn.createStatement();
             String sql;
-            sql = "UPDATE chrome.Users SET profile = ? WHERE userID = ?";
+            sql = "UPDATE Users SET profile = ? WHERE userID = ?";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, profile);
                 statement.setString(2, uid);
             }
-            System.out.println("Inserted records into the table...");
             stmt.close();
             conn.close();
         }catch(SQLException se){
