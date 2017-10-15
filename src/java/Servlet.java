@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 
-//import edu.virginia.cs.model.GenerateCoverQuery;
 import com.google.gson.Gson;
 import edu.virginia.cs.object.Query;
 import edu.virginia.cs.model.LanguageModel;
@@ -43,8 +42,9 @@ public class Servlet extends HttpServlet {
             String path = "/Users/Lucius/Documents/data";
             String ReferencePath = path + "/data/Reference-Model";
             String dmozPath = path + "/lucene-DMOZ-index";
-            String logPath = path + "/user-search-log/";
+//            String logPath = path + "/user-search-log/";
             String docPath = path + "/data/ODP-doc-content.xml";
+            String idfPath = path + "/AOL-Dictionary";
             
             HashMap<String, Double> refModel = Util.loadRefModel(ReferencePath);
             LoadLanguageModel llm = new LoadLanguageModel(refModel, false, false);
@@ -52,6 +52,7 @@ public class Servlet extends HttpServlet {
             ArrayList<LanguageModel> langModels = llm.getLanguageModels();
             IAP = new IntentAwarePrivacy(langModels, refModel, dmozPath);
             IAP.setTokenizer(false, false);
+            IAP.loadIDFRecord(idfPath);
 	}
     
         
@@ -180,13 +181,15 @@ public class Servlet extends HttpServlet {
                 String[] jsonData = request.getParameterValues("json[]");
                 String uid = request.getParameter("uid");
                 String userProfile = JDBC.getProfile(uid);
-//                for (String s: jsonData) {
-//                    System.out.println(s);
-//                }
-                Integer[] arr = IAP.reRankDocuments(jsonData, userProfile);
-                for (Integer i: arr) {
-                    System.out.print(i + ",");
+                for (String s: jsonData) {
+                    System.out.println(s);
                 }
+                Integer[] arr = IAP.reRankDocuments(jsonData, userProfile);
+//                for (Integer i: arr) {
+//                    System.out.print(i + ",");
+//                }
+//                System.out.println();
+                System.out.println(Arrays.toString(arr));
 //                int[] intArray = Arrays.stream(arr).mapToInt(Integer::intValue).toArray();
 //                PrintWriter out = response.getWriter();
 //                JSONObject jo = new JSONObject();
@@ -215,10 +218,10 @@ public class Servlet extends HttpServlet {
                 JDBC.saveClick(uid, url, title, query, 1, idx, time);
                 // update profile
                 String profile = JDBC.getProfile(uid);
-                System.out.println("old profile equals \"\":" + profile.equals(""));
+                System.out.println(profile);
+                System.out.println(profile.contains("\t"));
                 System.out.println("snippet:" + snippet);
                 String newProfile = IAP.updateProfileUsingClick(snippet, profile);
-                System.out.println("new profile");
                 System.out.println(newProfile);
                 JDBC.saveProfile(uid, newProfile);
             } else if (action.equals("SC")) {
@@ -312,8 +315,7 @@ public class Servlet extends HttpServlet {
                 
                 // 更新用户档案
                 String profile = JDBC.getProfile(uid);
-                System.out.println("old profile: " + profile);
-                System.out.println("user query: " + curQuery.getQueryText());
+                System.out.println(profile);
                 String newProfile = IAP.updateProfileUsingQuery(curQuery, profile);
                 System.out.println(newProfile);
                 JDBC.saveProfile(uid, newProfile);

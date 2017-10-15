@@ -142,6 +142,11 @@ public class JDBC {
             while (rs.next()) {
                 profile = rs.getString("profile");
             }
+                    
+            if (profile.contains(",")) {
+                profile = profile.replace(",", "\t");
+            }
+            
             rs.close();
             stmt.close();
             conn.close();
@@ -197,25 +202,25 @@ public class JDBC {
                         // java queries
                         Query tmp = new Query();
                         tmp.setQueryText(rs.getString("query"));
-                        tmp.setQueryLength(rs.getInt("queryLength"));
+                        tmp.setQueryLength(-1);
                         tmp.setQueryTopic(rs.getString("topic"));
                         tmp.setQueryTopicNo(rs.getInt("topicNo"));
-                        tmp.setBucketNo(rs.getInt("bucketNo"));
+                        tmp.setBucketNo(-1);
                         previousQueries.add(tmp);
                     } else if (rs.getInt("tag") == 2) {
                         // python query
                         pq.setQueryText(rs.getString("query"));
-                        pq.setQueryLength(rs.getInt("queryLength"));
+                        pq.setQueryLength(-1);
                         pq.setQueryTopic(rs.getString("topic"));
                         pq.setQueryTopicNo(rs.getInt("topicNo"));
-                        pq.setBucketNo(rs.getInt("bucketNo"));
+                        pq.setBucketNo(-1);
                     } else {
                         // user queries
                         uq.setQueryText(rs.getString("query"));
-                        uq.setQueryLength(rs.getInt("queryLength"));
+                        uq.setQueryLength(-1);
                         uq.setQueryTopic(rs.getString("topic"));
                         uq.setQueryTopicNo(rs.getInt("topicNo"));
-                        uq.setBucketNo(rs.getInt("bucketNo"));
+                        uq.setBucketNo(-1);
                     } 
                 } while (rs.next());
                 qd = new QueryData(previousQueries, uq, pq, session, action, time);
@@ -294,18 +299,16 @@ public class JDBC {
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
             stmt = conn.createStatement();
             String sql;
-            sql = "INSERT INTO Queries VALUES (?,?,?,?,?,?,?,?,?,?)";
+            sql = "INSERT INTO Queries VALUES (?,?,?,?,?,?,?,?)";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setInt(1, a);
                 statement.setInt(2, s);
                 statement.setString(3, q.getQueryText());
-                statement.setInt(4, q.getQueryLength());
-                statement.setString(5, q.getQueryTopic());
-                statement.setInt(6, q.getQueryTopicNo());
-                statement.setInt(7, q.getBucketNo());
-                statement.setInt(8, t);
-                statement.setString(9, uid);
-                statement.setString(10, time);
+                statement.setString(4, q.getQueryTopic());
+                statement.setInt(5, q.getQueryTopicNo());
+                statement.setInt(6, t);
+                statement.setString(7, uid);
+                statement.setString(8, time);
                 statement.executeUpdate();
             }
             stmt.close();
@@ -333,15 +336,29 @@ public class JDBC {
     public static void saveProfile(String uid, String profile) {
         Connection conn = null;
         Statement stmt = null;
+//        String s = "";
+        
+//        if (profile.contains("\t")) {
+////            for (String tmp: profile.split("\t")) {
+////                s += tmp + ",";
+////            }
+////            s = s.substring(0, s.length() - 1);
+//            profile = profile.replace("\t", ",");
+//        }
+        
+        System.out.println("Inside SAVEPROFILE()");
+        
         try{
             Class.forName("com.mysql.jdbc.Driver");
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
             stmt = conn.createStatement();
             String sql;
-            sql = "UPDATE Users AS u SET u.profile = ? WHERE userID = ?";
+            sql = "UPDATE Users SET profile = ? WHERE userID = ?";
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, profile);
                 statement.setString(2, uid);
+                System.out.println(statement);
+                statement.executeUpdate();
             }
             stmt.close();
             conn.close();
