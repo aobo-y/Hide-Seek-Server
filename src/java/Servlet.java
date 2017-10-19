@@ -73,31 +73,30 @@ public class Servlet extends HttpServlet {
             
         } else if (request.getMethod().equals("POST")) {
             //get parameters from POST request
-            //uid is already store locally
             //timestamp is generated here
             Date dNow = new Date();
             String time = Util.convertDateToString(dNow);
             
             String action = request.getParameter("action");
-            System.out.println("~~~~~" + action);
             if (action.equals("R")) {
-                // 注册用户
+                // register user
                 String uid = request.getParameter("uid");
                 JDBC.registerUser(uid);
             } else if (action.equals("U")) {
-                // 重排序，根据传过来的snippet，返回顺序
+                System.out.println("Action is RE-RANK::::::");
+                
+                // re-rank according to sinppets received
                 String[] jsonData = request.getParameterValues("json[]");
                 String uid = request.getParameter("uid");
                 String userProfile = JDBC.getProfile(uid);
                 
                 Integer[] arr = IAP.reRankDocuments(jsonData, userProfile);
-
-                System.out.println(Arrays.toString(arr));
                 List<Integer> intList = Arrays.asList(arr);
                 String json = new Gson().toJson(intList);
                 response.getWriter().write(json);
+                System.out.println("::::::RE-RANK SUCCESS");
             } else if (action.equals("UC")) {
-                // 存储用户点击，修改user profile
+                System.out.println("Action is USER CLICK::::::");
                 String uid = request.getParameter("uid");
                 String snippet = request.getParameter("snip");
                 String query = request.getParameter("query");
@@ -107,30 +106,26 @@ public class Servlet extends HttpServlet {
                 
                 // save user clicks
                 JDBC.saveClick(uid, url, title, query, 1, idx, time);
-                // update profile
+                // update user profile using click
                 String profile = JDBC.getProfile(uid);
-                System.out.println(profile);
-                System.out.println(profile.contains("\t"));
-                System.out.println("snippet:" + snippet);
                 String newProfile = IAP.updateProfileUsingClick(snippet, profile);
-                System.out.println(newProfile);
                 JDBC.saveProfile(uid, newProfile);
+                System.out.println("::::::USER CLICK SUCCESS");
             } else if (action.equals("SC")) {
-                // 存储模拟点击
+                System.out.println("Action is SIMULATED CLICK::::::");
                 String uid = request.getParameter("uid");
                 String query = request.getParameter("query");
                 int idx = Integer.valueOf(request.getParameter("click"));
                 String url = request.getParameter("url");
                 String title = request.getParameter("content");
                 
-                System.out.println("uid: " + uid);
-                System.out.println("url: " + url);
-                System.out.println("title: " + title);
-                
                 // save simulated clicks
                 JDBC.saveClick(uid, url, title, query, 0, idx, time);
+                System.out.println("::::::SIMULATED CLICK SUCCESS");
             } else if (action.equals("Q")) {
-                // 存储query，返回cover queries以及相关信息，修改user profile
+                
+                System.out.println("Action is QUERY::::::");
+
                 String uid = request.getParameter("uid");
                 String query = request.getParameter("query");
                 int numCover = Integer.parseInt(request.getParameter("numcover")) - 1;
@@ -143,14 +138,13 @@ public class Servlet extends HttpServlet {
                 Query pQuery = new Query();
                 Map<String, String> map = new LinkedHashMap<>();
                 
-                // 获得java的cover queries
+                // get java cover queries
                 if (JDBC.getPreviousCoverQueryData(uid) == null) {
-                    // 有史以来第一次查询
-                    System.out.println("这里请选1");
+                    // first query ever
                     coverQueries = IAP.getCoverQueries(curQuery, numCover);
                     //
                 } else {
-                    // 之前有过action
+                    // exists action before
                     QueryData qd = JDBC.getPreviousCoverQueryData(uid);
                     actionNo = qd.getActionID() + 1;
                     Query prevQuery = qd.getUserQuery();
@@ -166,14 +160,13 @@ public class Servlet extends HttpServlet {
                         }
                         sentToPython = qd.getPythonQuery().getQueryText();
                     } else {
-                        // 不同session
-                        System.out.println("这里请选3");
+                        // different session
                         coverQueries = IAP.getCoverQueries(curQuery, numCover);
                         sessionNo = qd.getSessionID() + 1;
                     }
                 }
                 
-                // 获得python的cover queries
+                // get query from python program
                 try {
                     pythonQuery = JDBC.getCover(sentToPython);
                     pQuery = IAP.getQueryTopic(pythonQuery);
@@ -181,10 +174,13 @@ public class Servlet extends HttpServlet {
                     Logger.getLogger(Servlet.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 
-                // 迅速把结果返回给用户
-                for (Query q: coverQueries) {
-                    map.put(q.getQueryText(), q.getQueryTopic());
-                    System.out.println(q.getQueryText() + "," + q.getQueryTopic());
+                // respond to users as soon as possible
+                try {
+                    for (Query q: coverQueries) {
+                        map.put(q.getQueryText(), q.getQueryTopic());
+                    }
+                } catch (NullPointerException e) {
+                    System.out.println("    No java queries generated");
                 }
                 if (null != curQuery.getQueryTopic()) {
                     map.put("input", curQuery.getQueryTopic());
@@ -192,25 +188,23 @@ public class Servlet extends HttpServlet {
                 if (null != pQuery.getQueryTopic()) {
                     map.put(pQuery.getQueryText(), pQuery.getQueryTopic());
                 }
-                System.out.println("input" + "," + curQuery.getQueryTopic());
-                System.out.println(pQuery.getQueryText() + "," + pQuery.getQueryTopic());
                 String json = new Gson().toJson(map);
                 response.getWriter().write(json);
                 
-                // 存储数据至数据库
-                JDBC.saveQuery(curQuery, actionNo, sessionNo, 0, uid, time);
-                for (Query q: coverQueries) {
-                    JDBC.saveQuery(q, actionNo, sessionNo, 1, uid, time);
+                // save query to database
+                if (null != curQuery.getQueryTopic()) {
+                    JDBC.saveQuery(curQuery, actionNo, sessionNo, 0, uid, time);
+                    for (Query q: coverQueries) {
+                        JDBC.saveQuery(q, actionNo, sessionNo, 1, uid, time);
+                    }
+                    JDBC.saveQuery(pQuery, actionNo, sessionNo, 2, uid, time);
                 }
-                JDBC.saveQuery(pQuery, actionNo, sessionNo, 2, uid, time);
                 
-                // 更新用户档案
+                // update user profile using query
                 String profile = JDBC.getProfile(uid);
-                System.out.println(profile);
                 String newProfile = IAP.updateProfileUsingQuery(curQuery, profile);
-                System.out.println(newProfile);
                 JDBC.saveProfile(uid, newProfile);
-                System.out.println(JDBC.getProfile(uid));
+                System.out.println("::::::QUERY SUCCESS");
             }
         }      
     }
@@ -227,7 +221,6 @@ public class Servlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        System.out.println("Get");
         response.addHeader("Access-Control-Allow-Origin", "*");
         processRequest(request, response);
     }
@@ -243,7 +236,6 @@ public class Servlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        System.out.println("POST");
         response.addHeader("Access-Control-Allow-Origin", "*");
         processRequest(request, response);   
     }

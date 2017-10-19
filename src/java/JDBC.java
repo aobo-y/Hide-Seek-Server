@@ -210,7 +210,6 @@ public class JDBC {
                 statement.setString(7, time);
                 statement.executeUpdate();
             }
-            System.out.println("Inserted records into the table...");
             stmt.close();
             conn.close();
         }catch(SQLException se){
@@ -288,7 +287,6 @@ public class JDBC {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, profile);
                 statement.setString(2, uid);
-                System.out.println(statement);
                 statement.executeUpdate();
             }
             stmt.close();
@@ -325,25 +323,28 @@ public class JDBC {
         String urlString = "http://120.77.42.144:8000/cover/?query=" + q;
 
         URL url = new URL(urlString);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-
-        con.setRequestProperty("User-Agent", USER_AGENT);
-
-        int responseCode = con.getResponseCode();
-        System.out.println("Sending get request : "+ url);
-        System.out.println("Response code : "+ responseCode);
-
-        // Reading response from input Stream
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String output;
-        StringBuffer response = new StringBuffer();
-
-        while ((output = in.readLine()) != null) {
-            response.append(output);
+        try {
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(3000);
+            con.setReadTimeout(3000);
+            con.setRequestProperty("User-Agent", USER_AGENT);
+            int responseCode = con.getResponseCode();
+            // Reading response from input Stream
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String output;
+            StringBuffer response = new StringBuffer();
+            while ((output = in.readLine()) != null) {
+                response.append(output);
+            }
+            in.close();
+            System.out.println("~~~~~PYTHON SUCCESS~~~~~");
+            System.out.println("    " + "python query: " + response.toString());
+            return response.toString();
+        } catch(java.net.SocketTimeoutException e) {
+            return null;
+        } catch (java.io.IOException e) {
+            return null;
         }
-        in.close();
-        System.out.println(response.toString());
-        return response.toString();
     } 
 }
