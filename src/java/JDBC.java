@@ -24,7 +24,6 @@ import edu.virginia.cs.object.Query;
 public class JDBC {
     
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    // static final String DB_URL = "jdbc:mysql://hcdm.cs.virginia.edu/";
     static final String DB_URL = "jdbc:mysql://localhost:3306/chrome?verifyServerCertificate=false&useSSL=true";
     static final String USER = "puxuan";
     static final String PASS = "astro611";

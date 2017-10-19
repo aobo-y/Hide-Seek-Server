@@ -42,7 +42,6 @@ public class Servlet extends HttpServlet {
             String path = "/Users/Lucius/Documents/data";
             String ReferencePath = path + "/data/Reference-Model";
             String dmozPath = path + "/lucene-DMOZ-index";
-//            String logPath = path + "/user-search-log/";
             String docPath = path + "/data/ODP-doc-content.xml";
             String idfPath = path + "/AOL-Dictionary";
             
