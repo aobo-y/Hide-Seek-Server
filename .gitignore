@@ -4,3 +4,7 @@ dist
 data/*
 .gradle
 !**/.gitkeep
+
+.project
+.classpath
+.settings
