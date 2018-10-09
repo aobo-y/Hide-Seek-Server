@@ -11,6 +11,14 @@ dependencies {
   implementation fileTree(dir: 'libs', include: '*.jar')
   implementation 'com.google.code.gson:gson:2.8.5'
   implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.12'
+  implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+}
+
+war {
+  webInf {
+    from 'data'
+    into 'data'
+  }
 }
 
 gretty {

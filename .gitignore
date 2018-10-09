@@ -1,3 +1,6 @@
-dist/
-build/
+bin
+build
+dist
+data/*
 .gradle
+!**/.gitkeep

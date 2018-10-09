@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -39,7 +40,9 @@ public class Servlet extends HttpServlet {
             //do initialization
             //notice the path string
             //String path = System.getenv("QG_PATH");
-            String path = "/Users/Lucius/Documents/data";
+            ServletContext context = getServletContext();
+            String path = context.getRealPath("/WEB-INF/data");
+            System.out.println(path);
             String ReferencePath = path + "/data/Reference-Model";
             String dmozPath = path + "/lucene-DMOZ-index";
             String docPath = path + "/data/ODP-doc-content.xml";
