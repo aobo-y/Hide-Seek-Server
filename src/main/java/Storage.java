@@ -11,6 +11,7 @@ import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.util.*;
 import edu.virginia.cs.object.Query;
+import edu.virginia.cs.utility.Util;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -21,12 +22,17 @@ import edu.virginia.cs.object.Query;
  *
  * @author aceni
  */
-public class JDBC {
+public class Storage {
 
    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
    static final String DB_URL = "jdbc:mysql://localhost:3306/chrome?verifyServerCertificate=false&useSSL=true";
    static final String USER = "root";
    static final String PASS = "example";
+
+   private static String getTime() {
+      Date dNow = new Date();
+      return Util.convertDateToString(dNow);
+   }
 
    public static void registerUser(String uid) {
       Connection conn = null;
@@ -189,7 +195,7 @@ public class JDBC {
       return qd;
    }
 
-   public static void saveClick(String uid, String url, String title, String query, int tag, int idx, String time) {
+   public static void saveClick(String uid, String url, String title, String query, int tag, int idx) {
       Connection conn = null;
       Statement stmt = null;
       try {
@@ -205,7 +211,7 @@ public class JDBC {
             statement.setString(4, query);
             statement.setInt(5, tag);
             statement.setInt(6, idx);
-            statement.setString(7, time);
+            statement.setString(7, Storage.getTime());
             statement.executeUpdate();
          }
          stmt.close();
@@ -230,7 +236,7 @@ public class JDBC {
       }
    }
 
-   public static void saveQuery(Query q, int a, int s, int t, String uid, String time) {
+   public static void saveQuery(Query q, int a, int s, int t, String uid) {
       Connection conn = null;
       Statement stmt = null;
       try {
@@ -247,7 +253,7 @@ public class JDBC {
             statement.setInt(5, q.getQueryTopicNo());
             statement.setInt(6, t);
             statement.setString(7, uid);
-            statement.setString(8, time);
+            statement.setString(8, Storage.getTime());
             statement.executeUpdate();
          }
          stmt.close();
@@ -307,10 +313,6 @@ public class JDBC {
             se.printStackTrace();
          }
       }
-   }
-
-   public static void main(String[] argv) throws Exception {
-
    }
 
    // get one cover query from python program
