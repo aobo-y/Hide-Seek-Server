@@ -23,11 +23,18 @@ import edu.virginia.cs.utility.Util;
  * @author aceni
  */
 public class Storage {
-
-   static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
    static final String DB_URL = "jdbc:mysql://localhost:3306/chrome?verifyServerCertificate=false&useSSL=true";
    static final String USER = "root";
    static final String PASS = "example";
+
+   static {
+      try {
+         Class.forName("com.mysql.cj.jdbc.Driver");
+      } catch (ClassNotFoundException e) {
+         System.out.println("Error: unable to load driver class!");
+         System.exit(1);
+      }
+   }
 
    private static String getTime() {
       Date dNow = new Date();
@@ -38,7 +45,6 @@ public class Storage {
       Connection conn = null;
       Statement stmt = null;
       try {
-         Class.forName("com.mysql.jdbc.Driver");
          conn = DriverManager.getConnection(DB_URL, USER, PASS);
          stmt = conn.createStatement();
          String sql;
@@ -75,7 +81,6 @@ public class Storage {
       Statement stmt = null;
       String profile = null;
       try {
-         Class.forName("com.mysql.jdbc.Driver");
          conn = DriverManager.getConnection(DB_URL, USER, PASS);
          stmt = conn.createStatement();
          String sql;
@@ -125,7 +130,6 @@ public class Storage {
       Query pq = new Query();
       ArrayList<Query> previousQueries = new ArrayList<>();
       try {
-         Class.forName("com.mysql.jdbc.Driver");
          conn = DriverManager.getConnection(DB_URL, USER, PASS);
          stmt = conn.createStatement();
          String sql;
@@ -199,7 +203,6 @@ public class Storage {
       Connection conn = null;
       Statement stmt = null;
       try {
-         Class.forName("com.mysql.jdbc.Driver");
          conn = DriverManager.getConnection(DB_URL, USER, PASS);
          stmt = conn.createStatement();
          String sql;
@@ -240,7 +243,6 @@ public class Storage {
       Connection conn = null;
       Statement stmt = null;
       try {
-         Class.forName("com.mysql.jdbc.Driver");
          conn = DriverManager.getConnection(DB_URL, USER, PASS);
          stmt = conn.createStatement();
          String sql;
@@ -283,7 +285,6 @@ public class Storage {
       Statement stmt = null;
 
       try {
-         Class.forName("com.mysql.jdbc.Driver");
          conn = DriverManager.getConnection(DB_URL, USER, PASS);
          stmt = conn.createStatement();
          String sql;
@@ -317,8 +318,6 @@ public class Storage {
 
    // get one cover query from python program
    public static String getCover(String query) throws Exception {
-
-      String USER_AGENT = "Mozilla/5.0";
       String q = URLEncoder.encode(query, "UTF-8");
       String urlString = "http://localhost:8000/cover/?query=" + q;
 
@@ -328,7 +327,6 @@ public class Storage {
          con.setRequestMethod("GET");
          con.setConnectTimeout(3000);
          con.setReadTimeout(3000);
-         con.setRequestProperty("User-Agent", USER_AGENT);
          int responseCode = con.getResponseCode();
          // Reading response from input Stream
          BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));

@@ -139,29 +139,33 @@ public class Servlet extends HttpServlet {
 
     private void updateClicks(HttpServletRequest request) {
         System.out.println("Action is USER CLICK::::::");
+
         String uid = request.getParameter("uid");
         String snippet = request.getParameter("snip");
         String query = request.getParameter("query");
-        int idx = Integer.valueOf(request.getParameter("click"));
         String url = request.getParameter("url");
         String title = request.getParameter("content");
+
+        int idx = Integer.valueOf(request.getParameter("click"));
 
         // save user clicks
         Storage.saveClick(uid, url, title, query, 1, idx);
         // update user profile using click
         String profile = Storage.getProfile(uid);
         String newProfile = IAP.updateProfileUsingClick(snippet, profile);
+
         Storage.saveProfile(uid, newProfile);
-        System.out.println("::::::USER CLICK SUCCESS");
     }
 
     private void simulateClick(HttpServletRequest request) {
         System.out.println("Action is SIMULATED CLICK::::::");
+
         String uid = request.getParameter("uid");
         String query = request.getParameter("query");
-        int idx = Integer.valueOf(request.getParameter("click"));
         String url = request.getParameter("url");
         String title = request.getParameter("content");
+
+        int idx = Integer.valueOf(request.getParameter("click"));
 
         // save simulated clicks
         Storage.saveClick(uid, url, title, query, 0, idx);
@@ -175,23 +179,23 @@ public class Servlet extends HttpServlet {
         String uid = request.getParameter("uid");
         String query = request.getParameter("query");
         int numCover = Integer.parseInt(request.getParameter("numcover")) - 1;
+
         Query curQuery = IAP.getQueryTopic(query);
         ArrayList<Query> coverQueries;
         int sessionNo = 0;
         int actionNo = 0;
         String sentToPython = "null";
-        String pythonQuery = null;
         Query pQuery = new Query();
         Map<String, String> map = new LinkedHashMap<>();
 
+        QueryData qd = Storage.getPreviousCoverQueryData(uid);
+
         // get java cover queries
-        if (Storage.getPreviousCoverQueryData(uid) == null) {
+        if (qd == null) {
             // first query ever
             coverQueries = IAP.getCoverQueries(curQuery, numCover);
-            //
         } else {
             // exists action before
-            QueryData qd = Storage.getPreviousCoverQueryData(uid);
             actionNo = qd.getActionID() + 1;
             Query prevQuery = qd.getUserQuery();
             Date previousTime = Util.convertStringToDate(qd.getTime());
@@ -216,7 +220,7 @@ public class Servlet extends HttpServlet {
 
         // get query from python program
         try {
-            pythonQuery = Storage.getCover(sentToPython);
+            String pythonQuery = Storage.getCover(sentToPython);
             pQuery = IAP.getQueryTopic(pythonQuery);
         } catch (Exception ex) {
             Logger.getLogger(Servlet.class.getName()).log(Level.SEVERE, null, ex);
