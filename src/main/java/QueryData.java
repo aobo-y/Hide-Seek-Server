@@ -17,10 +17,11 @@ public class QueryData {
     private int sessionID;
     private int actionID;
     private String time;
-    
-    public QueryData() {};
-    
-    public QueryData (ArrayList<Query> q, Query uq, Query pq, int s, int a, String t) {
+
+    public QueryData() {
+    };
+
+    public QueryData(ArrayList<Query> q, Query uq, Query pq, int s, int a, String t) {
         coverQueryList = q;
         userQuery = uq;
         pythonQuery = pq;
@@ -76,5 +77,5 @@ public class QueryData {
     public void setTime(String time) {
         this.time = time;
     }
-    
+
 }

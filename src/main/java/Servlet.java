@@ -1,3 +1,4 @@
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -30,52 +31,50 @@ import java.util.*;
  *
  * @author aceni
  */
-@WebServlet(name = "QueryGeneratorServlet", urlPatterns = {"QueryGenerator"})
+@WebServlet(name = "QueryGeneratorServlet", urlPatterns = { "QueryGenerator" })
 public class Servlet extends HttpServlet {
 
     IntentAwarePrivacy IAP;
 
-        @Override
-	public void init() {
-            //do initialization
-            //notice the path string
-            //String path = System.getenv("QG_PATH");
-            ServletContext context = getServletContext();
-            String path = context.getRealPath("/WEB-INF/data");
-            System.out.println(path);
-            String ReferencePath = path + "/data/Reference-Model";
-            String dmozPath = path + "/lucene-DMOZ-index";
-            String docPath = path + "/data/ODP-doc-content.xml";
-            String idfPath = path + "/AOL-Dictionary";
+    @Override
+    public void init() {
+        // do initialization
+        // notice the path string
+        // String path = System.getenv("QG_PATH");
+        ServletContext context = getServletContext();
+        String path = context.getRealPath("/WEB-INF/data");
+        System.out.println(path);
+        String ReferencePath = path + "/data/Reference-Model";
+        String dmozPath = path + "/lucene-DMOZ-index";
+        String docPath = path + "/data/ODP-doc-content.xml";
+        String idfPath = path + "/AOL-Dictionary";
 
-            HashMap<String, Double> refModel = Util.loadRefModel(ReferencePath);
-            LoadLanguageModel llm = new LoadLanguageModel(refModel, false, false);
-            llm.loadModels(docPath, 4);
-            ArrayList<LanguageModel> langModels = llm.getLanguageModels();
-            IAP = new IntentAwarePrivacy(langModels, refModel, dmozPath);
-            IAP.setTokenizer(false, false);
-            IAP.loadIDFRecord(idfPath);
-	}
-
-
+        HashMap<String, Double> refModel = Util.loadRefModel(ReferencePath);
+        LoadLanguageModel llm = new LoadLanguageModel(refModel, false, false);
+        llm.loadModels(docPath, 4);
+        ArrayList<LanguageModel> langModels = llm.getLanguageModels();
+        IAP = new IntentAwarePrivacy(langModels, refModel, dmozPath);
+        IAP.setTokenizer(false, false);
+        IAP.loadIDFRecord(idfPath);
+    }
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
-        if(request.getMethod().equals("GET")){
+        if (request.getMethod().equals("GET")) {
 
         } else if (request.getMethod().equals("POST")) {
-            //get parameters from POST request
-            //timestamp is generated here
+            // get parameters from POST request
+            // timestamp is generated here
             Date dNow = new Date();
             String time = Util.convertDateToString(dNow);
 
@@ -158,7 +157,8 @@ public class Servlet extends HttpServlet {
                         if (sequentialEdited == 0) {
                             coverQueries = IAP.getCoverQueries(curQuery, numCover);
                         } else {
-                            coverQueries = IAP.getCoverQueriesIfSeqEdited(curQuery, qd.getCoverQueryList(), numCover, sequentialEdited);
+                            coverQueries = IAP.getCoverQueriesIfSeqEdited(curQuery, qd.getCoverQueryList(), numCover,
+                                    sequentialEdited);
                         }
                         sentToPython = qd.getPythonQuery().getQueryText();
                     } else {
@@ -178,7 +178,7 @@ public class Servlet extends HttpServlet {
 
                 // respond to users as soon as possible
                 try {
-                    for (Query q: coverQueries) {
+                    for (Query q : coverQueries) {
                         map.put(q.getQueryText(), q.getQueryTopic());
                     }
                 } catch (NullPointerException e) {
@@ -196,7 +196,7 @@ public class Servlet extends HttpServlet {
                 // save query to database
                 if (null != curQuery.getQueryTopic()) {
                     JDBC.saveQuery(curQuery, actionNo, sessionNo, 0, uid, time);
-                    for (Query q: coverQueries) {
+                    for (Query q : coverQueries) {
                         JDBC.saveQuery(q, actionNo, sessionNo, 1, uid, time);
                     }
                     JDBC.saveQuery(pQuery, actionNo, sessionNo, 2, uid, time);
@@ -211,14 +211,15 @@ public class Servlet extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the
+    // + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -230,10 +231,10 @@ public class Servlet extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
