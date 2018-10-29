@@ -23,4 +23,5 @@ war {
 
 gretty {
   httpPort = 8080
+  contextPath = '/hide-seek-api'
 }
