@@ -8,4 +8,4 @@ EXPOSE 8080
 
 USER root
 
-CMD [ "gradle", "appRunWar" ]
+CMD [ "gradle", "appStart" ]
