@@ -1,3 +1,6 @@
+create database chrome;
+use chrome;
+
 -- keep each user profiles
 CREATE TABLE Users (
     userID varchar(48) NOT NULL,
