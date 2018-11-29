@@ -6,6 +6,6 @@ COPY . .
 
 EXPOSE 8080
 
-WORKDIR /usr/src/app/source
+USER root
 
 CMD [ "gradle", "appRunWar" ]
