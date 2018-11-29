@@ -1,0 +1,13 @@
+.git
+Dockerfile
+.dockerignore
+.gitignore
+.gradle
+README.md
+bin
+build
+scripts
+
+.project
+.classpath
+.settings
